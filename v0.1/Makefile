@@ -1,10 +1,9 @@
 TITLE_ID = VAIH00001
 TARGET   = vitaAirHockey
-OBJS     = main.o draw.o font_data.o menu.o utils.o
+OBJS     = main.o draw.o font_data.o
 
-LIBS = -lvita2d -lSceKernel_stub -lSceDisplay_stub -lSceGxm_stub \
-	-lSceSysmodule_stub -lSceCtrl_stub -lScePgf_stub -lSceTouch_stub \
-	-lSceCommonDialog_stub -lfreetype -lpng16 -ljpeg -lz -lm -lc 	
+LIBS = -lc -lSceKernel_stub -lSceDisplay_stub -lSceGxm_stub	\
+	-lSceCtrl_stub -lSceTouch_stub
 
 PREFIX  = arm-vita-eabi
 CC      = $(PREFIX)-gcc

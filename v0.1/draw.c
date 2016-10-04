@@ -1,11 +1,10 @@
+
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
 #include <psp2/display.h>
 #include <psp2/gxm.h>
 #include <psp2/kernel/sysmem.h>
-#include <vita2d.h>
-
 #include "draw.h"
 #include "utils.h"
 
@@ -14,6 +13,36 @@ extern const unsigned char msx_font[];
 static SceDisplayFrameBuf fb[2];
 static SceUID fb_memuid[2];
 static int cur_fb = 0;
+
+void *gpu_alloc(SceKernelMemBlockType type, unsigned int size, unsigned int attribs, SceUID *uid)
+{
+	void *mem;
+
+	if (type == SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW) {
+		size = align_mem(size, 256*1024);
+	} else {
+		size = align_mem(size, 4*1024);
+	}
+
+	*uid = sceKernelAllocMemBlock("gpu_mem", type, size, NULL);
+
+	if (sceKernelGetMemBlockBase(*uid, &mem) < 0)
+		return NULL;
+
+	if (sceGxmMapMemory(mem, size, attribs) < 0)
+		return NULL;
+
+	return mem;
+}
+
+void gpu_free(SceUID uid)
+{
+	void *mem = NULL;
+	if (sceKernelGetMemBlockBase(uid, &mem) < 0)
+		return;
+	sceGxmUnmapMemory(mem);
+	sceKernelFreeMemBlock(uid);
+}
 
 void init_video()
 {
@@ -46,7 +75,7 @@ void init_video()
 
 	/* Allocate memory for the framebuffers */
 	fb[0].base = gpu_alloc(SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW,
-		SCREEN_W * SCREEN_H * 4, 0, SCE_GXM_MEMORY_ATTRIB_RW, &fb_memuid[0]);
+		SCREEN_W * SCREEN_H * 4, SCE_GXM_MEMORY_ATTRIB_RW, &fb_memuid[0]);
 
 	if (fb[0].base == NULL) {
 		printf("Could not allocate memory for fb[0]. %p", fb[0].base);
@@ -54,7 +83,7 @@ void init_video()
 	}
 
 	fb[1].base = gpu_alloc(SCE_KERNEL_MEMBLOCK_TYPE_USER_CDRAM_RW,
-		SCREEN_W * SCREEN_H * 4, 0, SCE_GXM_MEMORY_ATTRIB_RW, &fb_memuid[1]);
+		SCREEN_W * SCREEN_H * 4, SCE_GXM_MEMORY_ATTRIB_RW, &fb_memuid[1]);
 
 	if (fb[1].base == NULL) {
 		printf("Could not allocate memory for fb[1]. %p", fb[1].base);

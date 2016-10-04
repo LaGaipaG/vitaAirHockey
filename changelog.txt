@@ -1,0 +1,22 @@
+## vitaAirHockey v0.1
+Air Hockey game for PS Vita.
+
+## Features
+The simplest Air Hockey game possible:
+- 2 paddles;
+- 1 puck;
+- The score;
+- No AI, local multiplayer only (on the same device).
+
+But... with:
+- Multi-touch support (front panel);
+- Both analogs support;
+- Possibility to increase and decrease the speed in game (with R and L).
+________________________________________________________________________
+
+## vitaAirHockey v0.2
+- Added icon and livearea images;
+- Added minimalist(just 1 choice) "blinking" menu;
+- Improved UI;
+- Improved the physics and the fun!
+- A little code optimization.

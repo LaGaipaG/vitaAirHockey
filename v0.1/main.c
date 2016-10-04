@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,12 +12,11 @@
 #include <psp2/types.h>
 #include <psp2/moduleinfo.h>
 #include <psp2/kernel/processmgr.h>
+
 #include <vita2d.h>
 
-#include "draw.h"
-#include "menu.h"
 #include "utils.h"
-
+#include "draw.h"
 
 
 PSP2_MODULE_INFO(0, 0, "vitaAirHockey");
@@ -24,12 +24,11 @@ PSP2_MODULE_INFO(0, 0, "vitaAirHockey");
 int main()
 {
 	init_video();
-	vita2d_init();
-	
+
 	/* Enable analog stick */
 	sceCtrlSetSamplingMode(SCE_CTRL_MODE_ANALOG);
 
-	/* Enable front and back touchscreen */
+	/* Enable front and (maybe) back touchscreen */
 	sceTouchSetSamplingState(SCE_TOUCH_PORT_FRONT, 1);
 	sceTouchSetSamplingState(SCE_TOUCH_PORT_BACK, 1);
 
@@ -41,8 +40,7 @@ int main()
 	/* Variables */
 /*	int x = SCREEN_W/2 - w/2;
 	int y = SCREEN_H/2 - h/2;
-*/	unsigned short speed = 10;
-	unsigned short speed2 = 15;
+*/	int speed = 10;
 	
 	int r = 35;
 //	uint32_t color = RGBA8(255, 0, 0, 255);
@@ -73,33 +71,25 @@ int main()
 	SceCtrlData pad;
 	SceTouchData touch;
 	signed char lx, ly, rx, ry;
-		
+	
+	void delay (unsigned int mseconds) {
+		clock_t goal = mseconds + clock();
+		while (goal > clock());
+	}
+	
 	/* Game variables */
 //	int start_game = 0;
 	int m1_points = 0;
 	int m2_points = 0;
 //	int last_point = 0;
-	int game_state = 0;
 
 	while (1) {
 			
-
-		sceCtrlPeekBufferPositive(0, &pad, 1);
-		sceTouchPeek(0, &touch, 1);
-		
-		if (game_state==0){
-			main_menu();
-			game_state=1;
-		}
-		else if (game_state == 1) {
-			if ((pad.buttons & SCE_CTRL_CROSS) || (pad.buttons & SCE_CTRL_CIRCLE)) {
-				game_state = 3;
-			}
-		}
-		else {
-			clear_screen();
+		clear_screen();
 
 		/* Read controls and touchscreen */
+		sceCtrlPeekBufferPositive(0, &pad, 1);
+		sceTouchPeek(0, &touch, 1);
 
 		if (pad.buttons & SCE_CTRL_START) {
 			break;
@@ -109,13 +99,11 @@ int main()
 		draw_rectangle (SCREEN_W/2-5, 0, 10, SCREEN_H, GREY);
 		
 		font_draw_string(10, 10, DARK_GREY, "vitaAirHockey");
-		font_draw_stringf(SCREEN_W - 320, 10, DARK_GREY, "speed: %2d", speed);
 		font_draw_stringf(SCREEN_W - 160, 10, GREEN, "FPS: %.2f", fps);
-/*		font_draw_stringf(10, 30, DARK_GREY,
-			"(%3d, %3d) (%3d, %3d) (%3d, %3d) size: (%d) "speed: %d", x1, y1, x2, y2, x3, y3, r, speed);
-*/		font_draw_stringf(SCREEN_W/3+75, 50, RED, "%3d", m1_points);
-		font_draw_string(SCREEN_W/2-5, 45, DARK_GREY, "_");
-		font_draw_stringf(SCREEN_W/2, 50, BLUE, "%3d", m2_points);
+		font_draw_stringf(10, 30, DARK_GREY,
+			"(%3d, %3d) (%3d, %3d) (%3d, %3d) size: (%d) speed: %d\n", x1, y1, x2, y2, x3, y3, r, speed);
+		font_draw_stringf(10, 50, RED, "%3d -", m1_points);
+		font_draw_stringf(60, 50, BLUE, " %3d", m2_points);
 
 		/* Move the mallet 1 */
 		if (pad.buttons & SCE_CTRL_UP) {
@@ -131,23 +119,13 @@ int main()
 		
 		/* Increase/decrease the speed of mallets and puck movement */
 		if (pad.buttons & SCE_CTRL_LTRIGGER) {
-			if ((speed < 1) || (speed > 40)) {
-				speed = 0;
-				speed2 = 0;
-			}
-			else {
-				speed--;
-				speed2--;
-			}
 			delay(5000);
-		}
-		else if (pad.buttons & SCE_CTRL_RTRIGGER) {
-			if (speed2 == 0) speed2 = 5;
+			speed--;
+			if (speed < 0) speed = 0;
+		} else 	if (pad.buttons & SCE_CTRL_RTRIGGER) {
 			delay(5000);
 			speed++;
-			speed2++;
-			if (speed > 40) speed = 40;
-			if (speed2 > 45) speed2 = 45;
+			if (speed > 50) speed = 50;
 		}
 		
 /*		if (pad.buttons & SCE_CTRL_CROSS) {
@@ -255,36 +233,24 @@ int main()
 		if (x1 > x3) { // if mallet1 is on the right
 			if (((x1-x3) >= 0) && ((x1-x3) <= 70)) {
 				if (y1 > y3) { // if mallet1 is on the bottom
-					if (((y1-y3) >= 0) && ((y1-y3) <= 35)) {
+					if (((y1-y3) >= 0) && ((y1-y3) <= 70)) {
 						puck_is_moving_right=0;
-						puck_is_moving_left=2;
+						puck_is_moving_left=1;
 						puck_is_moving_up=1;
 						puck_is_moving_down=0;
 					}
-					else if (((y1-y3) >35) && ((y1-y3) <= 70)) {
-						puck_is_moving_right=0;
-						puck_is_moving_left=1;
-						puck_is_moving_up=2;
-						puck_is_moving_down=0;						
-					}
 				}
 				else if (y1 < y3) { // if mallet1 is on the top
-					if (((y3-y1) >= 0) && ((y3-y1) <= 35)) {
-						puck_is_moving_right=0;
-						puck_is_moving_left=2;
-						puck_is_moving_up=0;
-						puck_is_moving_down=1;
-					}
-					else if (((y3-y1) >35) && ((y3-y1) <= 70)) {
+					if (((y3-y1) >= 0) && ((y3-y1) <= 70)) {
 						puck_is_moving_right=0;
 						puck_is_moving_left=1;
 						puck_is_moving_up=0;
-						puck_is_moving_down=2;						
-					}
+						puck_is_moving_down=1;
+					}					
 				}
 				else {
 					puck_is_moving_right=0;
-					puck_is_moving_left=2;
+					puck_is_moving_left=1;
 					puck_is_moving_up=0;
 					puck_is_moving_down=0;
 				}
@@ -293,41 +259,29 @@ int main()
 		else if (x1 < x3) { //if mallet1 is on the left
 			if (((x3-x1) >= 0) && ((x3-x1) <= 70)) { 
 				if (y1 > y3) { // if mallet1 is on the bottom
-					if (((y1-y3) >= 0) && ((y1-y3) <= 35)) {
-						puck_is_moving_right=2;
+					if (((y1-y3) >= 0) && ((y1-y3) <= 70)) {
+						puck_is_moving_right=1;
 						puck_is_moving_left=0;
 						puck_is_moving_up=1;
 						puck_is_moving_down=0;
 					}
-					if (((y1-y3) > 35) && ((y1-y3) <= 70)) {
-						puck_is_moving_right=1;
-						puck_is_moving_left=0;
-						puck_is_moving_up=2;
-						puck_is_moving_down=0;
-					}
 				}
 				else if (y1 < y3) {
-					if (((y3-y1) >= 0) && ((y3-y1) <= 35)) { // if mallet1 is on the top
-						puck_is_moving_right=2;
+					if (((y3-y1) >= 0) && ((y3-y1) <= 70)) { // if mallet1 is on the top
+						puck_is_moving_right=1;
 						puck_is_moving_left=0;
 						puck_is_moving_up=0;
 						puck_is_moving_down=1;
 					}					
-					if (((y3-y1) > 35) && ((y3-y1) <= 70)) { // if mallet1 is on the top
-						puck_is_moving_right=1;
-						puck_is_moving_left=0;
-						puck_is_moving_up=0;
-						puck_is_moving_down=2;
-					}					
 				}
 				else {
-					if ((puck_is_moving_right == 1) || (puck_is_moving_left == 1) || (puck_is_moving_right == 2) || (puck_is_moving_left == 2)) {
+					if ((puck_is_moving_right == 1) || (puck_is_moving_left == 1)) {
 						x3 = x1 + r * 2;
 					}
-					else if ((puck_is_moving_left == 0) && (puck_is_moving_right == 0) && (puck_is_moving_up == 0) && (puck_is_moving_down == 0)) {
+					if ((puck_is_moving_left == 0) && (puck_is_moving_right == 0) && (puck_is_moving_up == 0) && (puck_is_moving_down == 0)) {
 						x3 = x1 + r * 2;
 					}
-						puck_is_moving_right=2;
+						puck_is_moving_right=1;
 						puck_is_moving_left=0;
 						puck_is_moving_up=0;
 						puck_is_moving_down=0;
@@ -339,7 +293,7 @@ int main()
 				if (((y1-y3) >= 0) && ((y1-y3) <= 70)) {
 					puck_is_moving_right=0;
 					puck_is_moving_left=0;
-					puck_is_moving_up=2;
+					puck_is_moving_up=1;
 					puck_is_moving_down=0;
 				}
 			}
@@ -348,7 +302,7 @@ int main()
 					puck_is_moving_right=0;
 					puck_is_moving_left=0;
 					puck_is_moving_up=0;
-					puck_is_moving_down=2;
+					puck_is_moving_down=1;
 				}					
 			}
 			else {
@@ -356,43 +310,36 @@ int main()
 					puck_is_moving_left=0;
 					puck_is_moving_up=0;
 					puck_is_moving_down=0;
-					x3 = x1 + r * 2;
 			}
 		}
 
 		if (x2 > x3) { // if mallet2 is on the right
 			if (((x2-x3) >= 0) && ((x2-x3) <= 70)) {
 				if (y2 > y3) { // if mallet2 is on the bottom
-					if (((y2-y3) >= 0) && ((y2-y3) <= 35)) {
+					if (((y2-y3) >= 0) && ((y2-y3) <= 70)) {
 						puck_is_moving_right=0;
-						puck_is_moving_left=2;
+						puck_is_moving_left=1;
 						puck_is_moving_up=1;
 						puck_is_moving_down=0;
 					}
-					else if (((y2-y3) >35) && ((y2-y3) <= 70)) {
-						puck_is_moving_right=0;
-						puck_is_moving_left=1;
-						puck_is_moving_up=2;
-						puck_is_moving_down=0;						
-					}
 				}
 				else if (y2 < y3) { // if mallet2 is on the top
-					if (((y3-y2) >= 0) && ((y3-y2) <= 35)) {
-						puck_is_moving_right=0;
-						puck_is_moving_left=2;
-						puck_is_moving_up=0;
-						puck_is_moving_down=1;
-					}
-					else if (((y3-y2) >35) && ((y3-y2) <= 70)) {
+					if (((y3-y2) >= 0) && ((y3-y2) <= 70)) {
 						puck_is_moving_right=0;
 						puck_is_moving_left=1;
 						puck_is_moving_up=0;
-						puck_is_moving_down=2;						
-					}
+						puck_is_moving_down=1;
+					}					
 				}
 				else {
+					if ((puck_is_moving_left == 1) || (puck_is_moving_right == 1)) {
+						x3 = x2 - r * 2;
+					}
+					if ((puck_is_moving_left == 0) && (puck_is_moving_right == 0) && (puck_is_moving_up == 0) && (puck_is_moving_down == 0)) {
+						x3 = x2 - r * 2;
+					}
 					puck_is_moving_right=0;
-					puck_is_moving_left=2;
+					puck_is_moving_left=1;
 					puck_is_moving_up=0;
 					puck_is_moving_down=0;
 				}
@@ -401,42 +348,24 @@ int main()
 		else if (x2 < x3) { //if mallet2 is on the left
 			if (((x3-x2) >= 0) && ((x3-x2) <= 70)) { 
 				if (y2 > y3) { // if mallet2 is on the bottom
-					if (((y2-y3) >= 0) && ((y2-y3) <= 35)) {
-						puck_is_moving_right=2;
+					if (((y2-y3) >= 0) && ((y2-y3) <= 70)) {
+						puck_is_moving_right=1;
 						puck_is_moving_left=0;
 						puck_is_moving_up=1;
 						puck_is_moving_down=0;
 					}
-					if (((y2-y3) > 35) && ((y2-y3) <= 70)) {
-						puck_is_moving_right=1;
-						puck_is_moving_left=0;
-						puck_is_moving_up=2;
-						puck_is_moving_down=0;
-					}
 				}
 				else if (y2 < y3) {
-					if (((y3-y2) >= 0) && ((y3-y2) <= 35)) { // if mallet2 is on the top
-						puck_is_moving_right=2;
+					if (((y3-y2) >= 0) && ((y3-y2) <= 70)) { // if mallet2 is on the top
+						puck_is_moving_right=1;
 						puck_is_moving_left=0;
 						puck_is_moving_up=0;
 						puck_is_moving_down=1;
 					}					
-					if (((y3-y2) > 35) && ((y3-y2) <= 70)) { // if mallet2 is on the top
-						puck_is_moving_right=1;
-						puck_is_moving_left=0;
-						puck_is_moving_up=0;
-						puck_is_moving_down=2;
-					}					
 				}
 				else {
-					if ((puck_is_moving_right == 1) || (puck_is_moving_left == 1) || (puck_is_moving_right == 2) || (puck_is_moving_left == 2)) {
-						x3 = x2 - r * 2;
-					}
-					else if ((puck_is_moving_left == 0) && (puck_is_moving_right == 0) && (puck_is_moving_up == 0) && (puck_is_moving_down == 0)) {
-						x3 = x2 - r * 2;
-					}
-						puck_is_moving_right=0;
-						puck_is_moving_left=2;
+						puck_is_moving_right=1;
+						puck_is_moving_left=0;
 						puck_is_moving_up=0;
 						puck_is_moving_down=0;
 				}
@@ -447,7 +376,7 @@ int main()
 				if (((y2-y3) >= 0) && ((y2-y3) <= 70)) {
 					puck_is_moving_right=0;
 					puck_is_moving_left=0;
-					puck_is_moving_up=2;
+					puck_is_moving_up=1;
 					puck_is_moving_down=0;
 				}
 			}
@@ -456,7 +385,7 @@ int main()
 					puck_is_moving_right=0;
 					puck_is_moving_left=0;
 					puck_is_moving_up=0;
-					puck_is_moving_down=2;
+					puck_is_moving_down=1;
 				}					
 			}
 			else {
@@ -464,27 +393,13 @@ int main()
 					puck_is_moving_left=0;
 					puck_is_moving_up=0;
 					puck_is_moving_down=0;
-					x3 = x2 - r * 2;
 			}
 		}
-		if ((y1==y2) && ((x1+r) != (x2-r))){
-			if ((y1 == y3) && ((x1+r) == (x3-r))) x3 = x1 + r * 2;
-			else if ((y2 == y3) && ((x2-r) == (x3+r))) x3 = x2 - r * 2;
-		}
+		
 		
 		if (puck_is_moving_right == 1) {
 			if ((x3 + r) < SCREEN_W) {
 				x3 += speed;
-			}
-			else {
-				puck_is_moving_right = 0;
-				puck_is_moving_left = 1;
-			}
-		}
-		
-		else if (puck_is_moving_right == 2) {
-			if ((x3 + r) < SCREEN_W) {
-				x3 += speed2;
 			}
 			else {
 				puck_is_moving_right = 0;
@@ -502,16 +417,6 @@ int main()
 			}
 		}
 		
-		else if (puck_is_moving_left == 2) {
-			if ((x3 - r) > 0) {
-				x3 -= speed2;
-			}
-			else {
-				puck_is_moving_left = 0;
-				puck_is_moving_right = 1;
-			}
-		}
-		
 		if (puck_is_moving_up == 1) {
 			if ((y3 - r) > (speed)) {
 				y3 -= speed;
@@ -522,29 +427,9 @@ int main()
 			}
 		}
 		
-		else if (puck_is_moving_up == 2) {
-			if ((y3 - r) > (speed2)) {
-				y3 -= speed2;
-			}
-			else {
-				puck_is_moving_up = 0;
-				puck_is_moving_down = 1;
-			}
-		}
-		
 		if (puck_is_moving_down == 1) {
 			if ((y3 + r) <= (SCREEN_H - speed)) {
 				y3 += speed;
-			}
-			else {
-				puck_is_moving_down = 0;
-				puck_is_moving_up = 1;
-			}
-		}
-		
-		else if (puck_is_moving_down == 2) {
-			if ((y3 + r) <= (SCREEN_H - speed2)) {
-				y3 += speed2;
 			}
 			else {
 				puck_is_moving_down = 0;
@@ -573,7 +458,6 @@ int main()
 			puck_is_moving_down = 0;
 			puck_is_moving_left= 0;
 			puck_is_moving_right = 0;
-			delay (200000);
 		}
 		
 		if (((x3 - r) <= 5) && (y3 >= (SCREEN_H/4)) && (y3 <= ((SCREEN_H/4)*3))) {
@@ -588,7 +472,6 @@ int main()
 			puck_is_moving_down = 0;
 			puck_is_moving_left= 0;
 			puck_is_moving_right = 0;
-			delay (200000);
 		}
 		
 		/* Draw goals */
@@ -615,7 +498,7 @@ int main()
 			fps = (frames/(double)delta_micros)*1000000.0f;
 			frames = 0;
 		}
-		}
+
 		swap_buffers();
 		sceDisplayWaitVblankStart();
 		frames++;

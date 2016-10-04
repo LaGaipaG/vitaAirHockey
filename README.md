@@ -1,4 +1,4 @@
-## vitaAirHockey v0.1
+## vitaAirHockey v0.2
 Air Hockey game for PS Vita.
 
 ## Features
@@ -15,15 +15,19 @@ But... with:
 
 ## To-do list
 - Add IA;
-- Improve the physics and the collision;
 - Add textures;
 - Add sounds and music;
-- Add menu;
 - Add multilanguage support;
-- Optimizing the code;
-- Add livearea and icon;
 - Add back touch panel support;
-- Improve the UI.
+
+## WIP
+- Improve the physics and the collisions; (WIP)
+- Add menu; (WIP)
+- Optimizing the code; (WIP)
+
+## Done
+- Add livearea and icon; (Done)
+- Improve the UI. (Done)
 
 ## Credits
 Thanks to xerpi for the base script (based on vitahelloworld).
